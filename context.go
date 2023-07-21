@@ -38,7 +38,6 @@ const (
 	MIMEPOSTForm          = binding.MIMEPOSTForm
 	MIMEMultipartPOSTForm = binding.MIMEMultipartPOSTForm
 	MIMEYAML              = binding.MIMEYAML
-	MIMETOML              = binding.MIMETOML
 	DebugMode             = "debug"
 )
 
@@ -713,7 +712,7 @@ func (c *Context) BindYAML(obj any) error {
 
 // BindTOML is a shortcut for c.MustBindWith(obj, binding.TOML).
 func (c *Context) BindTOML(obj any) error {
-	return c.MustBindWith(obj, binding.TOML)
+	return c.MustBindWith(obj, binding.YAML)
 }
 
 // BindHeader is a shortcut for c.MustBindWith(obj, binding.Header).
@@ -782,7 +781,7 @@ func (c *Context) ShouldBindYAML(obj any) error {
 
 // ShouldBindTOML is a shortcut for c.ShouldBindWith(obj, binding.TOML).
 func (c *Context) ShouldBindTOML(obj any) error {
-	return c.ShouldBindWith(obj, binding.TOML)
+	return c.ShouldBindWith(obj, binding.YAML)
 }
 
 // ShouldBindHeader is a shortcut for c.ShouldBindWith(obj, binding.Header).
@@ -1068,7 +1067,7 @@ func (c *Context) YAML(code int, obj any) {
 
 // TOML serializes the given struct as TOML into the response body.
 func (c *Context) TOML(code int, obj any) {
-	c.Render(code, render.TOML{Data: obj})
+	c.Render(code, render.YAML{Data: obj})
 }
 
 // ProtoBuf serializes the given struct as ProtoBuf into the response body.
@@ -1211,10 +1210,6 @@ func (c *Context) Negotiate(code int, config Negotiate) {
 	case binding.MIMEYAML:
 		data := chooseData(config.YAMLData, config.Data)
 		c.YAML(code, data)
-
-	case binding.MIMETOML:
-		data := chooseData(config.TOMLData, config.Data)
-		c.TOML(code, data)
 
 	default:
 		c.AbortWithError(http.StatusNotAcceptable, errors.New("the accepted formats are not offered by the server")) //nolint: errcheck
