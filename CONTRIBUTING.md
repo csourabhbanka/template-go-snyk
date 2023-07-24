@@ -1,11 +1,13 @@
-# Contributing
+## Contributing
 
-Here are some guidelines that should help to start contributing to the project.
+- With issues:
+  - Use the search tool before opening a new issue.
+  - Please provide source code and commit sha if you found a bug.
+  - Review existing issues and provide feedback or react to them.
 
-- [Submitting pull Requests](https://doc.traefik.io/traefik/contributing/submitting-pull-requests/)
-- [Submitting issues](https://doc.traefik.io/traefik/contributing/submitting-issues/)
-- [Submitting security issues](https://doc.traefik.io/traefik/contributing/submitting-security-issues/)
-- [Advocating for Traefik](https://doc.traefik.io/traefik/contributing/advocating/)
-- [Triage Process](https://github.com/traefik/contributors-guide/blob/master/issue_triage.md)
-
-If you are willing to become a maintainer of the project, please take a look at the [maintainers guidelines](docs/content/contributing/maintainers-guidelines.md).
+- With pull requests:
+  - Open your pull request against `master`
+  - Your pull request should have no more than two commits, if not you should squash them.
+  - It should pass all tests in the available continuous integration systems such as GitHub Actions.
+  - You should add/modify tests to cover your proposed code changes.
+  - If your pull request contains a new feature, please document it on the README.

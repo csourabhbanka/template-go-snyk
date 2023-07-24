@@ -2,11 +2,10 @@
 // Use of this source code is governed by a MIT style
 // license that can be found in the LICENSE file.
 
-package main
+package gin
 
 import (
 	"errors"
-	"fmt"
 	"io"
 	"log"
 	"math"
@@ -16,12 +15,9 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
-	"reflect"
-	"runtime"
 	"strings"
 	"sync"
 	"time"
-	"unicode"
 
 	"github.com/gin-contrib/sse"
 	"github.com/gin-gonic/gin/binding"
@@ -38,46 +34,8 @@ const (
 	MIMEPOSTForm          = binding.MIMEPOSTForm
 	MIMEMultipartPOSTForm = binding.MIMEMultipartPOSTForm
 	MIMEYAML              = binding.MIMEYAML
-	DebugMode             = "debug"
+	MIMETOML              = binding.MIMETOML
 )
-
-const (
-	debugCode = iota
-	releaseCode
-	testCode
-)
-
-var DefaultWriter io.Writer = os.Stdout
-
-var (
-	ginMode  = debugCode
-	modeName = DebugMode
-)
-
-type ErrorType uint64
-
-const (
-	// ErrorTypeBind is used when Context.Bind() fails.
-	ErrorTypeBind ErrorType = 1 << 63
-	// ErrorTypeRender is used when Context.Render() fails.
-	ErrorTypeRender ErrorType = 1 << 62
-	// ErrorTypePrivate indicates a private error.
-	ErrorTypePrivate ErrorType = 1 << 0
-	// ErrorTypePublic indicates a public error.
-	ErrorTypePublic ErrorType = 1 << 1
-	// ErrorTypeAny indicates any other error.
-	ErrorTypeAny ErrorType = 1<<64 - 1
-	// ErrorTypeNu indicates any other error.
-	ErrorTypeNu = 2
-)
-
-// Error represents a error's specification.
-type Error struct {
-	Err  error
-	Type ErrorType
-	Meta any
-}
-type errorMsgs []*Error
 
 // BodyBytesKey indicates a default body bytes key.
 const BodyBytesKey = "_gin-gonic/gin/bodybyteskey"
@@ -149,10 +107,6 @@ func (c *Context) reset() {
 	*c.skippedNodes = (*c.skippedNodes)[:0]
 }
 
-func IsDebugging() bool {
-	return ginMode == debugCode
-}
-
 // Copy returns a copy of the current context that can be safely used outside the request's scope.
 // This has to be used when the context has to be passed to a goroutine.
 func (c *Context) Copy() *Context {
@@ -180,10 +134,6 @@ func (c *Context) Copy() *Context {
 // this function will return "main.handleGetUsers".
 func (c *Context) HandlerName() string {
 	return nameOfFunction(c.handlers.Last())
-}
-
-func nameOfFunction(f any) string {
-	return runtime.FuncForPC(reflect.ValueOf(f).Pointer()).Name()
 }
 
 // HandlerNames returns a list of all registered handlers for this context in descending order,
@@ -588,15 +538,6 @@ func (c *Context) initFormCache() {
 	}
 }
 
-func debugPrint(format string, values ...any) {
-	if IsDebugging() {
-		if !strings.HasSuffix(format, "\n") {
-			format += "\n"
-		}
-		fmt.Fprintf(DefaultWriter, "[GIN-debug] "+format, values...)
-	}
-}
-
 // GetPostFormArray returns a slice of strings for a given form key, plus
 // a boolean value whether at least one value exists for the given key.
 func (c *Context) GetPostFormArray(key string) (values []string, ok bool) {
@@ -712,7 +653,7 @@ func (c *Context) BindYAML(obj any) error {
 
 // BindTOML is a shortcut for c.MustBindWith(obj, binding.TOML).
 func (c *Context) BindTOML(obj any) error {
-	return c.MustBindWith(obj, binding.YAML)
+	return c.MustBindWith(obj, binding.TOML)
 }
 
 // BindHeader is a shortcut for c.MustBindWith(obj, binding.Header).
@@ -728,10 +669,6 @@ func (c *Context) BindUri(obj any) error {
 		return err
 	}
 	return nil
-}
-func (msg *Error) SetType(flags ErrorType) *Error {
-	msg.Type = flags
-	return msg
 }
 
 // MustBindWith binds the passed struct pointer using the specified binding engine.
@@ -781,7 +718,7 @@ func (c *Context) ShouldBindYAML(obj any) error {
 
 // ShouldBindTOML is a shortcut for c.ShouldBindWith(obj, binding.TOML).
 func (c *Context) ShouldBindTOML(obj any) error {
-	return c.ShouldBindWith(obj, binding.YAML)
+	return c.ShouldBindWith(obj, binding.TOML)
 }
 
 // ShouldBindHeader is a shortcut for c.ShouldBindWith(obj, binding.Header).
@@ -880,14 +817,6 @@ func (c *Context) RemoteIP() string {
 // ContentType returns the Content-Type header of the request.
 func (c *Context) ContentType() string {
 	return filterFlags(c.requestHeader("Content-Type"))
-}
-func filterFlags(content string) string {
-	for i, char := range content {
-		if char == ' ' || char == ';' {
-			return content[:i]
-		}
-	}
-	return content
 }
 
 // IsWebsocket returns true if the request headers indicate that a websocket
@@ -1067,7 +996,7 @@ func (c *Context) YAML(code int, obj any) {
 
 // TOML serializes the given struct as TOML into the response body.
 func (c *Context) TOML(code int, obj any) {
-	c.Render(code, render.YAML{Data: obj})
+	c.Render(code, render.TOML{Data: obj})
 }
 
 // ProtoBuf serializes the given struct as ProtoBuf into the response body.
@@ -1148,15 +1077,6 @@ func (c *Context) SSEvent(name string, message any) {
 	})
 }
 
-func isASCII(s string) bool {
-	for i := 0; i < len(s); i++ {
-		if s[i] > unicode.MaxASCII {
-			return false
-		}
-	}
-	return true
-}
-
 // Stream sends a streaming response and returns a boolean
 // indicates "Is client disconnected in middle of stream"
 func (c *Context) Stream(step func(w io.Writer) bool) bool {
@@ -1211,33 +1131,13 @@ func (c *Context) Negotiate(code int, config Negotiate) {
 		data := chooseData(config.YAMLData, config.Data)
 		c.YAML(code, data)
 
+	case binding.MIMETOML:
+		data := chooseData(config.TOMLData, config.Data)
+		c.TOML(code, data)
+
 	default:
 		c.AbortWithError(http.StatusNotAcceptable, errors.New("the accepted formats are not offered by the server")) //nolint: errcheck
 	}
-}
-
-func chooseData(custom, wildcard any) any {
-	if custom != nil {
-		return custom
-	}
-	if wildcard != nil {
-		return wildcard
-	}
-	panic("negotiation config is invalid")
-}
-
-func parseAccept(acceptHeader string) []string {
-	parts := strings.Split(acceptHeader, ",")
-	out := make([]string, 0, len(parts))
-	for _, part := range parts {
-		if i := strings.IndexByte(part, ';'); i > 0 {
-			part = part[:i]
-		}
-		if part = strings.TrimSpace(part); part != "" {
-			out = append(out, part)
-		}
-	}
-	return out
 }
 
 // NegotiateFormat returns an acceptable Accept format.

@@ -1,77 +1,49 @@
-<!-- PLEASE FOLLOW THE ISSUE TEMPLATE TO HELP TRIAGE AND SUPPORT! -->
+- With issues:
+  - Use the search tool before opening a new issue.
+  - Please provide source code and commit sha if you found a bug.
+  - Review existing issues and provide feedback or react to them.
 
-### Do you want to request a *feature* or report a *bug*?
+## Description
 
-<!--
-DO NOT FILE ISSUES FOR GENERAL SUPPORT QUESTIONS.
+<!-- Description of a problem -->
 
-The issue tracker is for reporting bugs and feature requests only.
-For end-user related support questions, please refer to one of the following:
+## How to reproduce
 
-- the Traefik community forum: https://community.traefik.io/
-
--->
-
-Bug
-
-<!--
-
-The configurations between 1.X and 2.X are NOT compatible.
-Please have a look here https://doc.traefik.io/traefik/getting-started/configuration-overview/.
-
--->
-
-### What did you do?
-
-<!--
-
-HOW TO WRITE A GOOD BUG REPORT?
-
-- Respect the issue template as much as possible.
-- The title should be short and descriptive.
-- Explain the conditions which led you to report this issue: the context.
-- The context should lead to something, an idea or a problem that you’re facing.
-- Remain clear and concise.
-- Format your messages to help the reader focus on what matters and understand the structure of your message, use Markdown syntax https://help.github.com/articles/github-flavored-markdown
-
--->
-
-### What did you expect to see?
-
-
-
-### What did you see instead?
-
-
-
-### Output of `traefik version`: (_What version of Traefik are you using?_)
-
-<!--
-`latest` is not considered as a valid version.
-
-For the Traefik Docker image:
-    docker run [IMAGE] version
-    ex: docker run traefik version
-
--->
-
+<!-- The smallest possible code example to show the problem that can be compiled, like -->
 ```
-(paste your output here)
+package main
+
+import (
+	"github.com/gin-gonic/gin"
+)
+
+func main() {
+	g := gin.Default()
+	g.GET("/hello/:name", func(c *gin.Context) {
+		c.String(200, "Hello %s", c.Param("name"))
+	})
+	g.Run(":9000")
+}
 ```
 
-### What is your environment & configuration (arguments, toml, provider, platform, ...)?
+## Expectations
 
-```toml
-# (paste your configuration here)
+<!-- Your expectation result of 'curl' command, like -->
+```
+$ curl http://localhost:9000/hello/world
+Hello world
 ```
 
-<!--
-Add more configuration information here.
--->
+## Actual result
 
-
-### If applicable, please paste the log output in DEBUG level (`--log.level=DEBUG` switch)
-
+<!-- Actual result showing the problem -->
 ```
-(paste your output here)
+$ curl -i http://localhost:9000/hello/world
+<YOUR RESULT>
 ```
+
+## Environment
+
+- go version:
+- gin version (or commit ref):
+- operating system:

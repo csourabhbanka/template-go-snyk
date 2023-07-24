@@ -1,160 +1,178 @@
+# Gin Web Framework
 
-<p align="center">
-    <picture>
-      <source media="(prefers-color-scheme: dark)" srcset="docs/content/assets/img/traefik.logo-dark.png">
-      <source media="(prefers-color-scheme: light)" srcset="docs/content/assets/img/traefik.logo.png">
-      <img alt="Traefik" title="Traefik" src="docs/content/assets/img/traefik.logo.png">
-    </picture>
-</p>
+<img align="right" width="159px" src="https://raw.githubusercontent.com/gin-gonic/logo/master/color.png">
 
-[![Build Status SemaphoreCI](https://semaphoreci.com/api/v1/containous/traefik/branches/master/shields_badge.svg)](https://semaphoreci.com/containous/traefik)
-[![Docs](https://img.shields.io/badge/docs-current-brightgreen.svg)](https://doc.traefik.io/traefik)
-[![Go Report Card](https://goreportcard.com/badge/traefik/traefik)](https://goreportcard.com/report/traefik/traefik)
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/traefik/traefik/blob/master/LICENSE.md)
-[![Join the community support forum at https://community.traefik.io/](https://img.shields.io/badge/style-register-green.svg?style=social&label=Discourse)](https://community.traefik.io/)
-[![Twitter](https://img.shields.io/twitter/follow/traefik.svg?style=social)](https://twitter.com/intent/follow?screen_name=traefik)
+[![Build Status](https://github.com/gin-gonic/gin/workflows/Run%20Tests/badge.svg?branch=master)](https://github.com/gin-gonic/gin/actions?query=branch%3Amaster)
+[![codecov](https://codecov.io/gh/gin-gonic/gin/branch/master/graph/badge.svg)](https://codecov.io/gh/gin-gonic/gin)
+[![Go Report Card](https://goreportcard.com/badge/github.com/gin-gonic/gin)](https://goreportcard.com/report/github.com/gin-gonic/gin)
+[![GoDoc](https://pkg.go.dev/badge/github.com/gin-gonic/gin?status.svg)](https://pkg.go.dev/github.com/gin-gonic/gin?tab=doc)
+[![Sourcegraph](https://sourcegraph.com/github.com/gin-gonic/gin/-/badge.svg)](https://sourcegraph.com/github.com/gin-gonic/gin?badge)
+[![Open Source Helpers](https://www.codetriage.com/gin-gonic/gin/badges/users.svg)](https://www.codetriage.com/gin-gonic/gin)
+[![Release](https://img.shields.io/github/release/gin-gonic/gin.svg?style=flat-square)](https://github.com/gin-gonic/gin/releases)
+[![TODOs](https://badgen.net/https/api.tickgit.com/badgen/github.com/gin-gonic/gin)](https://www.tickgit.com/browse?repo=github.com/gin-gonic/gin)
 
-Traefik (pronounced _traffic_) is a modern HTTP reverse proxy and load balancer that makes deploying microservices easy.
-Traefik integrates with your existing infrastructure components ([Docker](https://www.docker.com/), [Swarm mode](https://docs.docker.com/engine/swarm/), [Kubernetes](https://kubernetes.io), [Consul](https://www.consul.io/), [Etcd](https://coreos.com/etcd/), [Rancher v2](https://rancher.com), [Amazon ECS](https://aws.amazon.com/ecs), ...) and configures itself automatically and dynamically.
-Pointing Traefik at your orchestrator should be the _only_ configuration step you need.
+Gin is a web framework written in [Go](https://go.dev/). It features a martini-like API with performance that is up to 40 times faster thanks to [httprouter](https://github.com/julienschmidt/httprouter). If you need performance and good productivity, you will love Gin.
 
----
+**The key features of Gin are:**
 
-. **[Overview](#overview)** .
-**[Features](#features)** .
-**[Supported backends](#supported-backends)** .
-**[Quickstart](#quickstart)** .
-**[Web UI](#web-ui)** .
-**[Documentation](#documentation)** .
-
-. **[Support](#support)** .
-**[Release cycle](#release-cycle)** .
-**[Contributing](#contributing)** .
-**[Maintainers](#maintainers)** .
-**[Credits](#credits)** .
-
----
-
-:warning: Please be aware that the old configurations for Traefik v1.x are NOT compatible with the v2.x config as of now. If you're running v2, please ensure you are using a [v2 configuration](https://doc.traefik.io/traefik/).
-
-## Overview
-
-Imagine that you have deployed a bunch of microservices with the help of an orchestrator (like Swarm or Kubernetes) or a service registry (like etcd or consul).
-Now you want users to access these microservices, and you need a reverse proxy.
-
-Traditional reverse-proxies require that you configure _each_ route that will connect paths and subdomains to _each_ microservice. 
-In an environment where you add, remove, kill, upgrade, or scale your services _many_ times a day, the task of keeping the routes up to date becomes tedious. 
-
-**This is when Traefik can help you!**
-
-Traefik listens to your service registry/orchestrator API and instantly generates the routes so your microservices are connected to the outside world -- without further intervention from your part. 
-
-**Run Traefik and let it do the work for you!** 
-_(But if you'd rather configure some of your routes manually, Traefik supports that too!)_
-
-![Architecture](docs/content/assets/img/traefik-architecture.png)
-
-## Features
-
-- Continuously updates its configuration (No restarts!)
-- Supports multiple load balancing algorithms
-- Provides HTTPS to your microservices by leveraging [Let's Encrypt](https://letsencrypt.org)  (wildcard certificates support)
-- Circuit breakers, retry
-- See the magic through its clean web UI
-- Websocket, HTTP/2, gRPC ready
-- Provides metrics (Rest, Prometheus, Datadog, Statsd, InfluxDB 2.X)
-- Keeps access logs (JSON, CLF)
+- Zero allocation router
 - Fast
-- Exposes a Rest API
-- Packaged as a single binary file (made with :heart: with go) and available as an [official](https://hub.docker.com/r/_/traefik/) docker image
+- Middleware support
+- Crash-free
+- JSON validation
+- Routes grouping
+- Error management
+- Rendering built-in
+- Extendable
 
-## Supported Backends
 
-- [Docker](https://doc.traefik.io/traefik/providers/docker/) / [Swarm mode](https://doc.traefik.io/traefik/providers/docker/)
-- [Kubernetes](https://doc.traefik.io/traefik/providers/kubernetes-crd/)
-- [File](https://doc.traefik.io/traefik/providers/file/)
+## Getting started
 
-## Quickstart
+### Prerequisites
 
-To get your hands on Traefik, you can use the [5-Minute Quickstart](https://doc.traefik.io/traefik/getting-started/quick-start/) in our documentation (you will need Docker).
+- **[Go](https://go.dev/)**: any one of the **three latest major** [releases](https://go.dev/doc/devel/release) (we test it with these).
 
-## Web UI
+### Getting Gin
 
-You can access the simple HTML frontend of Traefik.
+With [Go module](https://github.com/golang/go/wiki/Modules) support, simply add the following import
 
-![Web UI Providers](docs/content/assets/img/webui-dashboard.png)
+```
+import "github.com/gin-gonic/gin"
+```
+
+to your code, and then `go [build|run|test]` will automatically fetch the necessary dependencies.
+
+Otherwise, run the following Go command to install the `gin` package:
+
+```sh
+$ go get -u github.com/gin-gonic/gin
+```
+
+### Running Gin
+
+First you need to import Gin package for using Gin, one simplest example likes the follow `example.go`:
+
+```go
+package main
+
+import (
+  "net/http"
+
+  "github.com/gin-gonic/gin"
+)
+
+func main() {
+  r := gin.Default()
+  r.GET("/ping", func(c *gin.Context) {
+    c.JSON(http.StatusOK, gin.H{
+      "message": "pong",
+    })
+  })
+  r.Run() // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
+}
+```
+
+And use the Go command to run the demo:
+
+```
+# run example.go and visit 0.0.0.0:8080/ping on browser
+$ go run example.go
+```
+
+### Learn more examples
+
+#### Quick Start
+
+Learn and practice more examples, please read the [Gin Quick Start](docs/doc.md) which includes API examples and builds tag.
+
+#### Examples
+
+A number of ready-to-run examples demonstrating various use cases of Gin on the [Gin examples](https://github.com/gin-gonic/examples) repository.
+
 
 ## Documentation
 
-You can find the complete documentation of Traefik v2 at [https://doc.traefik.io/traefik/](https://doc.traefik.io/traefik/).
+See [API documentation and descriptions](https://godoc.org/github.com/gin-gonic/gin) for package.
 
-A collection of contributions around Traefik can be found at [https://awesome.traefik.io](https://awesome.traefik.io).
+All documentation is available on the Gin website.
 
-## Support
+- [English](https://gin-gonic.com/docs/)
+- [简体中文](https://gin-gonic.com/zh-cn/docs/)
+- [繁體中文](https://gin-gonic.com/zh-tw/docs/)
+- [日本語](https://gin-gonic.com/ja/docs/)
+- [Español](https://gin-gonic.com/es/docs/)
+- [한국어](https://gin-gonic.com/ko-kr/docs/)
+- [Turkish](https://gin-gonic.com/tr/docs/)
+- [Persian](https://gin-gonic.com/fa/docs/)
 
-To get community support, you can:
+### Articles about Gin
 
-- join the Traefik community forum: [![Join the chat at https://community.traefik.io/](https://img.shields.io/badge/style-register-green.svg?style=social&label=Discourse)](https://community.traefik.io/)
+A curated list of awesome Gin framework.
 
-If you need commercial support, please contact [Traefik.io](https://traefik.io) by mail: <mailto:support@traefik.io>.
+- [Tutorial: Developing a RESTful API with Go and Gin](https://go.dev/doc/tutorial/web-service-gin)
 
-## Download
+## Benchmarks
 
-- Grab the latest binary from the [releases](https://github.com/traefik/traefik/releases) page and run it with the [sample configuration file](https://raw.githubusercontent.com/traefik/traefik/master/traefik.sample.toml):
+Gin uses a custom version of [HttpRouter](https://github.com/julienschmidt/httprouter), [see all benchmarks details](/BENCHMARKS.md).
 
-```shell
-./traefik --configFile=traefik.toml
-```
+| Benchmark name                 |       (1) |             (2) |          (3) |             (4) |
+| ------------------------------ | ---------:| ---------------:| ------------:| ---------------:|
+| BenchmarkGin_GithubAll         | **43550** | **27364 ns/op** |   **0 B/op** | **0 allocs/op** |
+| BenchmarkAce_GithubAll         |     40543 |     29670 ns/op |       0 B/op |     0 allocs/op |
+| BenchmarkAero_GithubAll        |     57632 |     20648 ns/op |       0 B/op |     0 allocs/op |
+| BenchmarkBear_GithubAll        |      9234 |    216179 ns/op |   86448 B/op |   943 allocs/op |
+| BenchmarkBeego_GithubAll       |      7407 |    243496 ns/op |   71456 B/op |   609 allocs/op |
+| BenchmarkBone_GithubAll        |       420 |   2922835 ns/op |  720160 B/op |  8620 allocs/op |
+| BenchmarkChi_GithubAll         |      7620 |    238331 ns/op |   87696 B/op |   609 allocs/op |
+| BenchmarkDenco_GithubAll       |     18355 |     64494 ns/op |   20224 B/op |   167 allocs/op |
+| BenchmarkEcho_GithubAll        |     31251 |     38479 ns/op |       0 B/op |     0 allocs/op |
+| BenchmarkGocraftWeb_GithubAll  |      4117 |    300062 ns/op |  131656 B/op |  1686 allocs/op |
+| BenchmarkGoji_GithubAll        |      3274 |    416158 ns/op |   56112 B/op |   334 allocs/op |
+| BenchmarkGojiv2_GithubAll      |      1402 |    870518 ns/op |  352720 B/op |  4321 allocs/op |
+| BenchmarkGoJsonRest_GithubAll  |      2976 |    401507 ns/op |  134371 B/op |  2737 allocs/op |
+| BenchmarkGoRestful_GithubAll   |       410 |   2913158 ns/op |  910144 B/op |  2938 allocs/op |
+| BenchmarkGorillaMux_GithubAll  |       346 |   3384987 ns/op |  251650 B/op |  1994 allocs/op |
+| BenchmarkGowwwRouter_GithubAll |     10000 |    143025 ns/op |   72144 B/op |   501 allocs/op |
+| BenchmarkHttpRouter_GithubAll  |     55938 |     21360 ns/op |       0 B/op |     0 allocs/op |
+| BenchmarkHttpTreeMux_GithubAll |     10000 |    153944 ns/op |   65856 B/op |   671 allocs/op |
+| BenchmarkKocha_GithubAll       |     10000 |    106315 ns/op |   23304 B/op |   843 allocs/op |
+| BenchmarkLARS_GithubAll        |     47779 |     25084 ns/op |       0 B/op |     0 allocs/op |
+| BenchmarkMacaron_GithubAll     |      3266 |    371907 ns/op |  149409 B/op |  1624 allocs/op |
+| BenchmarkMartini_GithubAll     |       331 |   3444706 ns/op |  226551 B/op |  2325 allocs/op |
+| BenchmarkPat_GithubAll         |       273 |   4381818 ns/op | 1483152 B/op | 26963 allocs/op |
+| BenchmarkPossum_GithubAll      |     10000 |    164367 ns/op |   84448 B/op |   609 allocs/op |
+| BenchmarkR2router_GithubAll    |     10000 |    160220 ns/op |   77328 B/op |   979 allocs/op |
+| BenchmarkRivet_GithubAll       |     14625 |     82453 ns/op |   16272 B/op |   167 allocs/op |
+| BenchmarkTango_GithubAll       |      6255 |    279611 ns/op |   63826 B/op |  1618 allocs/op |
+| BenchmarkTigerTonic_GithubAll  |      2008 |    687874 ns/op |  193856 B/op |  4474 allocs/op |
+| BenchmarkTraffic_GithubAll     |       355 |   3478508 ns/op |  820744 B/op | 14114 allocs/op |
+| BenchmarkVulcan_GithubAll      |      6885 |    193333 ns/op |   19894 B/op |   609 allocs/op |
 
-- Or use the official tiny Docker image and run it with the [sample configuration file](https://raw.githubusercontent.com/traefik/traefik/master/traefik.sample.toml):
+- (1): Total Repetitions achieved in constant time, higher means more confident result
+- (2): Single Repetition Duration (ns/op), lower is better
+- (3): Heap Memory (B/op), lower is better
+- (4): Average Allocations per Repetition (allocs/op), lower is better
 
-```shell
-docker run -d -p 8080:8080 -p 80:80 -v $PWD/traefik.toml:/etc/traefik/traefik.toml traefik
-```
 
-- Or get the sources:
+## Middlewares
 
-```shell
-git clone https://github.com/traefik/traefik
-```
+You can find many useful Gin middlewares at [gin-contrib](https://github.com/gin-contrib).
 
-## Introductory Videos
 
-You can find high level and deep dive videos on [videos.traefik.io](https://videos.traefik.io).
+## Users
 
-## Maintainers
+Awesome project lists using [Gin](https://github.com/gin-gonic/gin) web framework.
 
-We are strongly promoting a philosophy of openness and sharing, and firmly standing against the elitist closed approach. Being part of the core team should be accessible to anyone who is motivated and want to be part of that journey!
-This [document](docs/content/contributing/maintainers-guidelines.md) describes how to be part of the core team as well as various responsibilities and guidelines for Traefik maintainers.
-You can also find more information on our process to review pull requests and manage issues [in this document](docs/content/contributing/maintainers.md).
+* [gorush](https://github.com/appleboy/gorush): A push notification server written in Go.
+* [fnproject](https://github.com/fnproject/fn): The container native, cloud agnostic serverless platform.
+* [photoprism](https://github.com/photoprism/photoprism): Personal photo management powered by Go and Google TensorFlow.
+* [lura](https://github.com/luraproject/lura): Ultra performant API Gateway with middlewares.
+* [picfit](https://github.com/thoas/picfit): An image resizing server written in Go.
+* [dkron](https://github.com/distribworks/dkron): Distributed, fault tolerant job scheduling system.
+
 
 ## Contributing
 
-If you'd like to contribute to the project, refer to the [contributing documentation](CONTRIBUTING.md).
+Gin is the work of hundreds of contributors. We appreciate your help!
 
-Please note that this project is released with a [Contributor Code of Conduct](CODE_OF_CONDUCT.md).
-By participating in this project, you agree to abide by its terms.
-
-## Release Cycle
-
-- We usually release 3/4 new versions (e.g. 1.1.0, 1.2.0, 1.3.0) per year.
-- Release Candidates are available before the release (e.g. 1.1.0-rc1, 1.1.0-rc2, 1.1.0-rc3, 1.1.0-rc4, before 1.1.0).
-- Bug-fixes (e.g. 1.1.1, 1.1.2, 1.2.1, 1.2.3) are released as needed (no additional features are delivered in those versions, bug-fixes only).
-
-Each version is supported until the next one is released (e.g. 1.1.x will be supported until 1.2.0 is out).
-
-We use [Semantic Versioning](https://semver.org/).
-
-## Mailing Lists
-
-- General announcements, new releases: mail at news+subscribe@traefik.io or on [the online viewer](https://groups.google.com/a/traefik.io/forum/#!forum/news).
-- Security announcements: mail at security+subscribe@traefik.io or on [the online viewer](https://groups.google.com/a/traefik.io/forum/#!forum/security).
-
-## Credits
-
-Kudos to [Peka](http://peka.byethost11.com/photoblog/) for his awesome work on the gopher's logo!.
-
-The gopher's logo of Traefik is licensed under the Creative Commons 3.0 Attributions license.
-
-The gopher's logo of Traefik was inspired by the gopher stickers made by [Takuya Ueda](https://twitter.com/tenntenn).
-The original Go gopher was designed by [Renee French](https://reneefrench.blogspot.com/).
+Please see [CONTRIBUTING](CONTRIBUTING.md) for details on submitting patches and the contribution workflow.

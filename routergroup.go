@@ -2,7 +2,7 @@
 // Use of this source code is governed by a MIT style
 // license that can be found in the LICENSE file.
 
-package main
+package gin
 
 import (
 	"net/http"
@@ -240,7 +240,7 @@ func (group *RouterGroup) createStaticHandler(relativePath string, fs http.FileS
 
 func (group *RouterGroup) combineHandlers(handlers HandlersChain) HandlersChain {
 	finalSize := len(group.Handlers) + len(handlers)
-	//assert1(finalSize < int(abortIndex), "too many handlers")
+	assert1(finalSize < int(abortIndex), "too many handlers")
 	mergedHandlers := make(HandlersChain, finalSize)
 	copy(mergedHandlers, group.Handlers)
 	copy(mergedHandlers[len(group.Handlers):], handlers)
@@ -251,14 +251,6 @@ func (group *RouterGroup) calculateAbsolutePath(relativePath string) string {
 	return joinPaths(group.basePath, relativePath)
 }
 
-func joinPaths(absolutePath, relativePath string) string {
-	if relativePath == "" {
-		return absolutePath
-	}
-
-	finalPath := path.Join(absolutePath, relativePath)
-	return finalPath + "/"
-}
 func (group *RouterGroup) returnObj() IRoutes {
 	if group.root {
 		return group.engine

@@ -2,7 +2,7 @@
 // Use of this source code is governed by a MIT style
 // license that can be found in the LICENSE file.
 
-package main
+package gin
 
 import (
 	"fmt"
@@ -11,13 +11,11 @@ import (
 	"net/http"
 	"os"
 	"path"
-	"reflect"
 	"regexp"
-	"runtime"
 	"strings"
 	"sync"
-	"unsafe"
 
+	"github.com/gin-gonic/gin/internal/bytesconv"
 	"github.com/gin-gonic/gin/render"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
@@ -183,7 +181,7 @@ var _ IRouter = (*Engine)(nil)
 // - UseRawPath:             false
 // - UnescapePathValues:     true
 func New() *Engine {
-	//debugPrintWARNINGNew()
+	debugPrintWARNINGNew()
 	engine := &Engine{
 		RouterGroup: RouterGroup{
 			Handlers: nil,
@@ -216,9 +214,9 @@ func New() *Engine {
 
 // Default returns an Engine instance with the Logger and Recovery middleware already attached.
 func Default() *Engine {
-	//()
+	debugPrintWARNINGDefault()
 	engine := New()
-	//	engine.Use(Logger(), Recovery())
+	engine.Use(Logger(), Recovery())
 	return engine
 }
 
@@ -255,12 +253,24 @@ func (engine *Engine) LoadHTMLGlob(pattern string) {
 	left := engine.delims.Left
 	right := engine.delims.Right
 	templ := template.Must(template.New("").Delims(left, right).Funcs(engine.FuncMap).ParseGlob(pattern))
+
+	if IsDebugging() {
+		debugPrintLoadTemplate(templ)
+		engine.HTMLRender = render.HTMLDebug{Glob: pattern, FuncMap: engine.FuncMap, Delims: engine.delims}
+		return
+	}
+
 	engine.SetHTMLTemplate(templ)
 }
 
 // LoadHTMLFiles loads a slice of HTML files
 // and associates the result with HTML renderer.
 func (engine *Engine) LoadHTMLFiles(files ...string) {
+	if IsDebugging() {
+		engine.HTMLRender = render.HTMLDebug{Files: files, FuncMap: engine.FuncMap, Delims: engine.delims}
+		return
+	}
+
 	templ := template.Must(template.New("").Delims(engine.delims.Left, engine.delims.Right).Funcs(engine.FuncMap).ParseFiles(files...))
 	engine.SetHTMLTemplate(templ)
 }
@@ -268,7 +278,7 @@ func (engine *Engine) LoadHTMLFiles(files ...string) {
 // SetHTMLTemplate associate a template with HTML renderer.
 func (engine *Engine) SetHTMLTemplate(templ *template.Template) {
 	if len(engine.trees) > 0 {
-		//	debugPrintWARNINGSetHTMLTemplate()
+		debugPrintWARNINGSetHTMLTemplate()
 	}
 
 	engine.HTMLRender = render.HTMLProduction{Template: templ.Funcs(engine.FuncMap)}
@@ -307,21 +317,6 @@ func (engine *Engine) rebuild404Handlers() {
 
 func (engine *Engine) rebuild405Handlers() {
 	engine.allNoMethod = engine.combineHandlers(engine.noMethod)
-}
-
-func assert1(guard bool, text string) {
-	if !guard {
-		panic(text)
-	}
-}
-
-func debugPrintRoute(httpMethod, absolutePath string, handlers HandlersChain) {
-
-	nuHandlers := len(handlers)
-	handlerName := runtime.FuncForPC(reflect.ValueOf(handlers[0]).Pointer()).Name()
-	_ = handlerName
-	_ = nuHandlers
-
 }
 
 func (engine *Engine) addRoute(method, path string, handlers HandlersChain) {
@@ -365,7 +360,7 @@ func iterate(path, method string, routes RoutesInfo, root *node) RoutesInfo {
 		routes = append(routes, RouteInfo{
 			Method:      method,
 			Path:        path,
-			Handler:     runtime.FuncForPC(reflect.ValueOf(handlerFunc).Pointer()).Name(),
+			Handler:     nameOfFunction(handlerFunc),
 			HandlerFunc: handlerFunc,
 		})
 	}
@@ -379,16 +374,16 @@ func iterate(path, method string, routes RoutesInfo, root *node) RoutesInfo {
 // It is a shortcut for http.ListenAndServe(addr, router)
 // Note: this method will block the calling goroutine indefinitely unless an error happens.
 func (engine *Engine) Run(addr ...string) (err error) {
-	//defer func() { debugPrintError(err) }()
+	defer func() { debugPrintError(err) }()
 
 	if engine.isUnsafeTrustedProxies() {
-		//	debugPrint("[WARNING] You trusted all proxies, this is NOT safe. We recommend you to set a value.\n" +
-		//			"Please check https://pkg.go.dev/github.com/gin-gonic/gin#readme-don-t-trust-all-proxies for details.")
+		debugPrint("[WARNING] You trusted all proxies, this is NOT safe. We recommend you to set a value.\n" +
+			"Please check https://pkg.go.dev/github.com/gin-gonic/gin#readme-don-t-trust-all-proxies for details.")
 	}
 
-	//	address := resolveAddress(addr)
-	//	debugPrint("Listening and serving HTTP on %s\n", address)
-	//	err = http.ListenAndServe(address, engine.Handler())
+	address := resolveAddress(addr)
+	debugPrint("Listening and serving HTTP on %s\n", address)
+	err = http.ListenAndServe(address, engine.Handler())
 	return
 }
 
@@ -499,12 +494,12 @@ func parseIP(ip string) net.IP {
 // It is a shortcut for http.ListenAndServeTLS(addr, certFile, keyFile, router)
 // Note: this method will block the calling goroutine indefinitely unless an error happens.
 func (engine *Engine) RunTLS(addr, certFile, keyFile string) (err error) {
-	//debugPrint("Listening and serving HTTPS on %s\n", addr)
-	//	defer func() { debugPrintError(err) }()
+	debugPrint("Listening and serving HTTPS on %s\n", addr)
+	defer func() { debugPrintError(err) }()
 
 	if engine.isUnsafeTrustedProxies() {
-		//		debugPrint("[WARNING] You trusted all proxies, this is NOT safe. We recommend you to set a value.\n" +
-		//			"Please check https://pkg.go.dev/github.com/gin-gonic/gin#readme-don-t-trust-all-proxies for details.")
+		debugPrint("[WARNING] You trusted all proxies, this is NOT safe. We recommend you to set a value.\n" +
+			"Please check https://pkg.go.dev/github.com/gin-gonic/gin#readme-don-t-trust-all-proxies for details.")
 	}
 
 	err = http.ListenAndServeTLS(addr, certFile, keyFile, engine.Handler())
@@ -515,12 +510,12 @@ func (engine *Engine) RunTLS(addr, certFile, keyFile string) (err error) {
 // through the specified unix socket (i.e. a file).
 // Note: this method will block the calling goroutine indefinitely unless an error happens.
 func (engine *Engine) RunUnix(file string) (err error) {
-	//	debugPrint("Listening and serving HTTP on unix:/%s", file)
-	//	defer func() { debugPrintError(err) }()
+	debugPrint("Listening and serving HTTP on unix:/%s", file)
+	defer func() { debugPrintError(err) }()
 
 	if engine.isUnsafeTrustedProxies() {
-		//		debugPrint("[WARNING] You trusted all proxies, this is NOT safe. We recommend you to set a value.\n" +
-		//			"Please check https://github.com/gin-gonic/gin/blob/master/docs/doc.md#dont-trust-all-proxies for details.")
+		debugPrint("[WARNING] You trusted all proxies, this is NOT safe. We recommend you to set a value.\n" +
+			"Please check https://github.com/gin-gonic/gin/blob/master/docs/doc.md#dont-trust-all-proxies for details.")
 	}
 
 	listener, err := net.Listen("unix", file)
@@ -538,12 +533,12 @@ func (engine *Engine) RunUnix(file string) (err error) {
 // through the specified file descriptor.
 // Note: this method will block the calling goroutine indefinitely unless an error happens.
 func (engine *Engine) RunFd(fd int) (err error) {
-	//	debugPrint("Listening and serving HTTP on fd@%d", fd)//
-	//defer func() { debugPrintError(err) }()
+	debugPrint("Listening and serving HTTP on fd@%d", fd)
+	defer func() { debugPrintError(err) }()
 
 	if engine.isUnsafeTrustedProxies() {
-		//		debugPrint("[WARNING] You trusted all proxies, this is NOT safe. We recommend you to set a value.\n" +
-		//			"Please check https://github.com/gin-gonic/gin/blob/master/docs/doc.md#dont-trust-all-proxies for details.")
+		debugPrint("[WARNING] You trusted all proxies, this is NOT safe. We recommend you to set a value.\n" +
+			"Please check https://github.com/gin-gonic/gin/blob/master/docs/doc.md#dont-trust-all-proxies for details.")
 	}
 
 	f := os.NewFile(uintptr(fd), fmt.Sprintf("fd@%d", fd))
@@ -559,12 +554,12 @@ func (engine *Engine) RunFd(fd int) (err error) {
 // RunListener attaches the router to a http.Server and starts listening and serving HTTP requests
 // through the specified net.Listener
 func (engine *Engine) RunListener(listener net.Listener) (err error) {
-	//	debugPrint("Listening and serving HTTP on listener what's bind with address@%s", listener.Addr())
-	//	defer func() { debugPrintError(err) }()
+	debugPrint("Listening and serving HTTP on listener what's bind with address@%s", listener.Addr())
+	defer func() { debugPrintError(err) }()
 
 	if engine.isUnsafeTrustedProxies() {
-		//		debugPrint("[WARNING] You trusted all proxies, this is NOT safe. We recommend you to set a value.\n" +
-		//			"Please check https://github.com/gin-gonic/gin/blob/master/docs/doc.md#dont-trust-all-proxies for details.")
+		debugPrint("[WARNING] You trusted all proxies, this is NOT safe. We recommend you to set a value.\n" +
+			"Please check https://github.com/gin-gonic/gin/blob/master/docs/doc.md#dont-trust-all-proxies for details.")
 	}
 
 	err = http.Serve(listener, engine.Handler())
@@ -666,7 +661,7 @@ func serveError(c *Context, code int, defaultMessage []byte) {
 		c.writermem.Header()["Content-Type"] = mimePlain
 		_, err := c.Writer.Write(defaultMessage)
 		if err != nil {
-			//			debugPrint("cannot write message to writer during serve error: %v", err)
+			debugPrint("cannot write message to writer during serve error: %v", err)
 		}
 		return
 	}
@@ -694,28 +689,23 @@ func redirectFixedPath(c *Context, root *node, trailingSlash bool) bool {
 	rPath := req.URL.Path
 
 	if fixedPath, ok := root.findCaseInsensitivePath(cleanPath(rPath), trailingSlash); ok {
-		req.URL.Path = BytesToString(fixedPath)
+		req.URL.Path = bytesconv.BytesToString(fixedPath)
 		redirectRequest(c)
 		return true
 	}
 	return false
 }
 
-func BytesToString(b []byte) string {
-	return unsafe.String(unsafe.SliceData(b), len(b))
-}
-
 func redirectRequest(c *Context) {
 	req := c.Request
 	rPath := req.URL.Path
-	_ = rPath
 	rURL := req.URL.String()
 
 	code := http.StatusMovedPermanently // Permanent redirect, request with GET method
 	if req.Method != http.MethodGet {
 		code = http.StatusTemporaryRedirect
 	}
-	//debugPrint("redirecting request %d: %s --> %s", code, rPath, rURL)
+	debugPrint("redirecting request %d: %s --> %s", code, rPath, rURL)
 	http.Redirect(c.Writer, req, rURL, code)
 	c.writermem.WriteHeaderNow()
 }

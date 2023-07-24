@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be found
 // at https://github.com/julienschmidt/httprouter/blob/master/LICENSE
 
-package main
+package gin
 
 import (
 	"bytes"
@@ -10,7 +10,8 @@ import (
 	"strings"
 	"unicode"
 	"unicode/utf8"
-	"unsafe"
+
+	"github.com/gin-gonic/gin/internal/bytesconv"
 )
 
 var (
@@ -92,17 +93,14 @@ func (n *node) addChild(child *node) {
 
 func countParams(path string) uint16 {
 	var n uint16
-	s := StringToBytes(path)
+	s := bytesconv.StringToBytes(path)
 	n += uint16(bytes.Count(s, strColon))
 	n += uint16(bytes.Count(s, strStar))
 	return n
 }
-func StringToBytes(s string) []byte {
-	return unsafe.Slice(unsafe.StringData(s), len(s))
-}
 
 func countSections(path string) uint16 {
-	s := StringToBytes(path)
+	s := bytesconv.StringToBytes(path)
 	return uint16(bytes.Count(s, strSlash))
 }
 
@@ -186,7 +184,7 @@ walk:
 
 			n.children = []*node{&child}
 			// []byte for proper unicode char conversion, see #65
-			n.indices = BytesToString([]byte{n.path[i]})
+			n.indices = bytesconv.BytesToString([]byte{n.path[i]})
 			n.path = path[:i]
 			n.handlers = nil
 			n.wildChild = false
@@ -219,7 +217,7 @@ walk:
 			// Otherwise insert it
 			if c != ':' && c != '*' && n.nType != catchAll {
 				// []byte for proper unicode char conversion, see #65
-				n.indices += BytesToString([]byte{c})
+				n.indices += bytesconv.BytesToString([]byte{c})
 				child := &node{
 					fullPath: fullPath,
 				}
