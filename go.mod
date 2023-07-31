@@ -13,7 +13,7 @@ require (
 	github.com/mattn/go-isatty v0.0.19
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/pelletier/go-toml/v2 v2.0.9
-	github.com/rs/zerolog v1.29.1
+	github.com/rs/zerolog v1.30.0
 	github.com/stretchr/testify v1.8.4
 	github.com/traefik/traefik/v3 v3.0.0-beta3
 	github.com/traefik/yaegi v0.15.1
