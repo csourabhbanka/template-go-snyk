@@ -5,7 +5,7 @@ go 1.20
 require (
 	github.com/bytedance/sonic v1.10.0-rc2
 	github.com/gin-contrib/sse v0.1.0
-	github.com/go-playground/validator/v10 v10.14.1
+	github.com/go-playground/validator/v10 v10.15.4
 	github.com/goccy/go-json v0.10.2
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/hashicorp/go-retryablehttp v0.7.4
